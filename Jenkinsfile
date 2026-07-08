@@ -33,6 +33,23 @@ pipeline {
             }
         }
 
+        stage('Debug kubectl') {
+            steps {
+                sh '''
+                  echo "---- whoami ----"
+                  whoami
+                  echo "---- PATH ----"
+                  echo $PATH
+                  echo "---- ls /usr/local/bin ----"
+                  ls -la /usr/local/bin/
+                  echo "---- file check ----"
+                  file /usr/local/bin/kubectl || true
+                  echo "---- direct exec attempt ----"
+                  /usr/local/bin/kubectl version --client || true
+                '''
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig-cred', variable: 'KUBECONFIG')]) {
