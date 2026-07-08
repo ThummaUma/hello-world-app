@@ -5,6 +5,7 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
         IMAGE_NAME = "umathumma/hello-world-app"
         IMAGE_TAG = "${BUILD_NUMBER}"
+        KUBECTL = "/var/jenkins_home/bin/kubectl"
     }
 
     stages {
@@ -37,8 +38,8 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig-cred', variable: 'KUBECONFIG')]) {
                     sh '''
-                      /usr/local/bin/kubectl set image deployment/hello-world-app hello-world-app=$IMAGE_NAME:$IMAGE_TAG --record
-                      /usr/local/bin/kubectl rollout status deployment/hello-world-app
+                      $KUBECTL set image deployment/hello-world-app hello-world-app=$IMAGE_NAME:$IMAGE_TAG --record
+                      $KUBECTL rollout status deployment/hello-world-app
                     '''
                 }
             }
