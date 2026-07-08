@@ -1,0 +1,64 @@
+@Library('hello-world-shared-library') _
+
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "umathumma/hello-world-app"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+        GITHUB_CREDENTIALS = credentials('github-creds')
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkoutCode(
+                    repoUrl: 'https://github.com/ThummaUma/hello-world-app.git',
+                    branch: 'main'
+                )
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                buildImage(
+                    imageName: env.IMAGE_NAME,
+                    imageTag: env.IMAGE_TAG
+                )
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                pushImage(
+                    imageName: env.IMAGE_NAME,
+                    imageTag: env.IMAGE_TAG,
+                    username: env.DOCKERHUB_CREDENTIALS_USR,
+                    password: env.DOCKERHUB_CREDENTIALS_PSW
+                )
+            }
+        }
+
+        stage('Update Manifest') {
+            steps {
+                updateManifest(
+                    manifestsRepo: 'https://github.com/ThummaUma/hello-world-manifests.git',
+                    valuesFile: 'charts/hello-world-app/values.yaml',
+                    imageTag: env.IMAGE_TAG,
+                    gitUser: env.GITHUB_CREDENTIALS_USR,
+                    gitToken: env.GITHUB_CREDENTIALS_PSW
+                )
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "GitOps pipeline completed! Argo CD will auto-deploy tag ${IMAGE_TAG}"
+        }
+        failure {
+            echo "Pipeline failed. Check logs above."
+        }
+    }
+}
