@@ -37,10 +37,9 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig-cred', variable: 'KUBECONFIG')]) {
                     sh '''
-  export PATH=$PATH:/usr/local/bin:/usr/bin
-  kubectl set image deployment/hello-world-app hello-world-app=$IMAGE_NAME:$IMAGE_TAG --record
-  kubectl rollout status deployment/hello-world-app
-'''
+                      /usr/local/bin/kubectl set image deployment/hello-world-app hello-world-app=$IMAGE_NAME:$IMAGE_TAG --record
+                      /usr/local/bin/kubectl rollout status deployment/hello-world-app
+                    '''
                 }
             }
         }
