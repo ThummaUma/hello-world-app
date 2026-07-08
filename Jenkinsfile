@@ -8,6 +8,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -25,10 +26,10 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 sh '''
-                  echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
-                  docker push $IMAGE_NAME:$IMAGE_TAG
-                  docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-                  docker push $IMAGE_NAME:latest
+                    echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                    docker push $IMAGE_NAME:$IMAGE_TAG
+                    docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+                    docker push $IMAGE_NAME:latest
                 '''
             }
         }
@@ -36,16 +37,36 @@ pipeline {
         stage('Debug kubectl') {
             steps {
                 sh '''
-                  echo "---- whoami ----"
-                  whoami
-                  echo "---- PATH ----"
-                  echo $PATH
-                  echo "---- ls /usr/local/bin ----"
-                  ls -la /usr/local/bin/
-                  echo "---- file check ----"
-                  file /usr/local/bin/kubectl || true
-                  echo "---- direct exec attempt ----"
-                  /usr/local/bin/kubectl version --client || true
+                    echo "========== DEBUG =========="
+
+                    echo "Hostname:"
+                    hostname
+
+                    echo "Current User:"
+                    whoami
+
+                    echo "Working Directory:"
+                    pwd
+
+                    echo "PATH:"
+                    echo $PATH
+
+                    echo "Which kubectl:"
+                    which kubectl || true
+
+                    echo "List /usr/local/bin:"
+                    ls -la /usr/local/bin
+
+                    echo "Check kubectl file:"
+                    ls -l /usr/local/bin/kubectl || true
+
+                    echo "Shared Library Dependencies:"
+                    ldd /usr/local/bin/kubectl || true
+
+                    echo "kubectl Version:"
+                    /usr/local/bin/kubectl version --client || true
+
+                    echo "========== END DEBUG =========="
                 '''
             }
         }
@@ -54,8 +75,8 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig-cred', variable: 'KUBECONFIG')]) {
                     sh '''
-                      /usr/local/bin/kubectl set image deployment/hello-world-app hello-world-app=$IMAGE_NAME:$IMAGE_TAG --record
-                      /usr/local/bin/kubectl rollout status deployment/hello-world-app
+                        /usr/local/bin/kubectl set image deployment/hello-world-app hello-world-app=$IMAGE_NAME:$IMAGE_TAG --record
+                        /usr/local/bin/kubectl rollout status deployment/hello-world-app
                     '''
                 }
             }
@@ -66,8 +87,10 @@ pipeline {
         success {
             echo "Pipeline completed successfully. Image ${IMAGE_TAG} deployed to Kubernetes."
         }
+
         failure {
             echo "Pipeline failed. Check logs above."
         }
     }
 }
+
