@@ -5,8 +5,7 @@ app = Flask(__name__)
 metrics = PrometheusMetrics(app)
 
 metrics.info('app_info', 'Hello World application info', version='1.0.0')
-
-@app.route('/')
+@app.route('/', methods=['GET'])
 def hello():
     return "<h1>Hello World!</h1><p>This app is running inside a Docker container.</p>"
 
